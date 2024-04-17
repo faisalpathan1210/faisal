@@ -1,0 +1,102 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <ctime>
+
+using namespace std;
+
+class Book {
+private:
+    string title;
+    string author;
+    string ISBN;
+    bool available;
+public:
+    Book(string _title, string _author, string _ISBN): title(_title), author(_author), ISBN(_ISBN), available(true) {}
+    string getTitle() { return title; }
+    string getAuthor() { return author; }
+    string getISBN() { return ISBN; }
+    bool isAvailable() { return available; }
+    void setAvailability(bool status) { available = status; }
+};
+
+class Borrower {
+private:
+    string name;
+    int ID;
+    vector<Book*> borrowedBooks;
+public:
+    Borrower(string _name, int _ID): name(_name), ID(_ID) {}
+    string getName() { return name; }
+    int getID() { return ID; }
+    vector<Book*> getBorrowedBooks() { return borrowedBooks; }
+    void borrowBook(Book* book) { borrowedBooks.push_back(book); }
+    void returnBook(Book* book) {
+        for (auto it = borrowedBooks.begin(); it != borrowedBooks.end(); ++it) {
+            if (*it == book) {
+                borrowedBooks.erase(it);
+                break;
+            }
+        }
+    }
+};
+
+class Transaction {
+private:
+    Book* book;
+    Borrower* borrower;
+    time_t date;
+public:
+    Transaction(Book* _book, Borrower* _borrower): book(_book), borrower(_borrower) {
+        date = time(nullptr);
+    }
+    Book* getBook() { return book; }
+    Borrower* getBorrower() { return borrower; }
+    time_t getDate() { return date; }
+};
+
+class Library {
+private:
+    vector<Book> books;
+    vector<Borrower> borrowers;
+    vector<Transaction> transactions;
+public:
+    void addBook(const Book& book) { books.push_back(book); }
+    void addBorrower(const Borrower& borrower) { borrowers.push_back(borrower); }
+    void borrowBook(Book& book, Borrower& borrower) {
+        if (book.isAvailable()) {
+            book.setAvailability(false);
+            borrower.borrowBook(&book);
+            transactions.push_back(Transaction(&book, &borrower));
+            cout << "Book '" << book.getTitle() << "' borrowed by " << borrower.getName() << endl;
+        } else {
+            cout << "Book '" << book.getTitle() << "' is not available for borrowing." << endl;
+        }
+    }
+    void returnBook(Book& book, Borrower& borrower) {
+        book.setAvailability(true);
+        borrower.returnBook(&book);
+        cout << "Book '" << book.getTitle() << "' returned by " << borrower.getName() << endl;
+    }
+};
+
+int main() {
+    Library library;
+
+    Book book1("The Great Gatsby", "F. Scott Fitzgerald", "978-0743273565");
+    Book book2("To Kill a Mockingbird", "Harper Lee", "978-0061120084");
+
+    Borrower borrower1("Alice", 1);
+    Borrower borrower2("Bob", 2);
+
+    library.addBook(book1);
+    library.addBook(book2);
+    library.addBorrower(borrower1);
+    library.addBorrower(borrower2);
+
+    library.borrowBook(book1, borrower1);
+    library.borrowBook(book2, borrower2);
+    library.returnBook(book1, borrower1);
+
+    return 0;
+}
